@@ -103,6 +103,9 @@ let tree = QCheck.make ~print ~shrink:(shrink QCheck.Shrink.char) (gen elt)
 
 let two =
   let gen =
+    (* Maybe we want to use `frequency` for better test space exploration.
+       Here half the time two trees are involved in a test, they will be the
+       same. *)
     oneof
       [
         pair (gen elt) (gen elt);

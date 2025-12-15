@@ -46,6 +46,9 @@ let print_model = QCheck.Print.(list (pair int char))
 let print_exn = Printexc.to_string
 let count = 1000
 
+(* It could be nice to also have the input (or even the function call), to
+   reproduce the failure *)
+(* Isn't [print_model] sometimes used to print something else than models ? *)
 (** Make a QCheck test that fails if the two values returned by [f] are not
     equal. Compared to using [Test.make], this prints the two unequal values
     when the test fails. [f] returns [(output, model)] where [output] is the
@@ -63,6 +66,7 @@ let singleton_test =
   mk "singleton" (pair small_nat char) print_model @@ fun (n, c) ->
   (abstract (Intmap.singleton n c), Model.singleton n c)
 
+(* This test should be called reflexive_compare_test *)
 let compare_test =
   mk "compare" two Print.bool @@ fun (t0, t1) ->
   let t0 = interpret t0 and t1 = interpret t1 in
@@ -181,10 +185,12 @@ let idempotent_fst_or_snd =
       always ~print:(fun _ -> "snd") (fun _ _ b -> b);
     ]
 
+(* Model and reference don't have the same function name *)
 let union_test =
   make_setop_test "idempotent_union" idempotent_fst_or_snd Fun.id
     Intmap.idempotent_union Model.union
 
+(* Model and reference don't have the same function name *)
 let inter_test =
   make_setop_test "idempotent_inter" idempotent_fst_or_snd Fun.id
     Intmap.idempotent_inter Model.inter
@@ -200,11 +206,14 @@ let interf_test =
         always ~print:(fun _ -> "-> None") (fun _ _ b -> Some b);
       ]
   in
+(* Model and reference don't have the same function name *)
   make_setop_test "idempotent_inter_filter" f Fun.id
     Intmap.idempotent_inter_filter Model.interf
 
+(* Model and reference don't have the same function name *)
 let diff_test =
   make_setop_test "different"
+  (* Documentation mention an hypothesis on [f] *)
     (fun3 O.int O.char O.char (option char))
     Fn.apply Intmap.difference Model.diff
 
@@ -213,11 +222,13 @@ let make_setcmp_test name arb_fun intmap_setcmp model_setcmp =
   let f = Fn.apply f and t0 = interpret t0 and t1 = interpret t1 in
   (intmap_setcmp f t0 t1, model_setcmp f (abstract t0) (abstract t1))
 
+(* Model and reference don't have the same function name *)
 let subset_test =
   make_setcmp_test "reflexive_subset_domain_for_all2"
     (fun3 O.int O.char O.char bool)
     Intmap.reflexive_subset_domain_for_all2 Model.subset
 
+(* We are testing a function that is not provided by the implementation ? *)
 let intersect a b = Option.is_some (Intmap.min_binding_inter a b)
 
 let intersect_test =
@@ -225,6 +236,7 @@ let intersect_test =
   let t0 = interpret t0 and t1 = interpret t1 in
   (intersect t0 t1, Model.intersect (abstract t0) (abstract t1))
 
+(* Model and reference don't have the same function name *)
 let merge_test =
   make_setop_test "slow_merge"
     (fun3 O.int O.(option char) O.(option char) (option char))

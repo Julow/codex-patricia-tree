@@ -23,6 +23,9 @@ type 'a t = (int * 'a) list
 let empty = []
 let singleton i a = [ (i, a) ]
 
+(* This function is used to test `Intmap.reflexive_compare`.
+   It should then be called `reflexive_compare`.
+   Also, I don't believe this is the semantic described in the documentation. *)
 let compare cmp m0 m1 =
   let cmp' a b =
     let c = compare_keys (fst a) (fst b) in
@@ -37,6 +40,8 @@ let size = List.length
 let mem = List.mem_assoc
 let find = List.assoc
 
+(* The implementation could be smarter / more efficient without obfuscating the
+   semantic *)
 let add i a m =
   (* guarantee uniqueness of keys *)
   let m = List.remove_assoc i m in
@@ -58,8 +63,13 @@ let filter f = with_uncurry List.filter f
 let for_all p = with_uncurry List.for_all p
 let exists p = with_uncurry List.exists p
 
+(* This function is used to test `Intmap.idempotent_union`.
+   It should be called the same. *)
 let union f m0 m1 =
-  let keys = keys @@ List.append m0 m1 in
+  (* I suggest to use the same strategy to compute the list of keys than in the
+     following function (inter) *)
+  let k0 = keys m0 and k1 = keys m1 in
+  let keys = List.sort_uniq compare_keys @@ List.append k0 k1 in
   let aux i =
     ( i,
       match (List.assoc_opt i m0, List.assoc_opt i m1) with
@@ -70,6 +80,7 @@ let union f m0 m1 =
   in
   List.map aux keys
 
+(* Same remark on the `idempotent` prefix *)
 let inter f m0 m1 =
   let k0 = keys m0 and k1 = keys m1 in
   let keys = List.sort_uniq compare_keys @@ List.append k0 k1 in
@@ -80,6 +91,7 @@ let inter f m0 m1 =
   in
   List.filter_map aux keys
 
+(* `idempotent` *)
 let interf f m0 m1 =
   let k0 = keys m0 and k1 = keys m1 in
   let keys = List.sort_uniq compare_keys @@ List.append k0 k1 in
@@ -90,6 +102,10 @@ let interf f m0 m1 =
   in
   List.filter_map aux keys
 
+(* This function is used to test `Intmap.difference`, it should be called the
+   same.
+   Also, it may not implement the semantic described in the documentation,
+   regarding the call to [f]. But the documentation is fuzzy on this part.*)
 let diff f m0 m1 =
   let keys = keys @@ List.append m0 m1 in
   let aux i =
@@ -109,6 +125,7 @@ let rec subsetf phi s t =
       if d = 0 then phi x a b && subsetf phi xs ys
       else d > 0 && subsetf phi s ys
 
+(* not the same name as the tested function *)
 let subset = subsetf
 let subsetk s t = subsetf (fun _i _x _y -> true) s t
 let intersect m0 m1 = inter (fun _ _ _ -> ()) m0 m1 <> []
